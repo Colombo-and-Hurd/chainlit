@@ -1,5 +1,6 @@
 import asyncio
 import json
+from copy import deepcopy
 from typing import Any, Dict, Literal, Optional, Tuple, TypedDict, Union
 from urllib.parse import unquote
 
@@ -24,6 +25,7 @@ from chainlit.types import (
     InputAudioChunkPayload,
     MessagePayload,
 )
+from chainlit.utils import utc_now
 from chainlit.user import PersistedUser, User
 from chainlit.user_session import user_sessions
 
@@ -319,6 +321,18 @@ async def process_message(session: WebsocketSession, payload: MessagePayload):
         await context.emitter.task_end()
 
 
+def _find_step_by_id(steps: list[dict], step_id: str) -> Optional[dict]:
+    for step in steps:
+        if step.get("id") == step_id:
+            return step
+        nested = step.get("steps") or []
+        if nested:
+            candidate = _find_step_by_id(nested, step_id)
+            if candidate:
+                return candidate
+    return None
+
+
 @sio.on("edit_message")  # pyright: ignore [reportOptionalCall]
 async def edit_message(sid, payload: MessagePayload):
     """Handle a message sent by the User."""
@@ -347,6 +361,85 @@ async def edit_message(sid, payload: MessagePayload):
             pass
         finally:
             await context.emitter.task_end()
+
+
+@sio.on("edit_assistant_message")  # pyright: ignore [reportOptionalCall]
+async def edit_assistant_message(sid, payload: Dict[str, Any]):
+    session = WebsocketSession.require(sid)
+    context = init_ws_context(session)
+    data_layer = get_data_layer()
+
+    message_id = str(payload.get("messageId", "")).strip()
+    output = payload.get("output")
+
+    if not message_id:
+        return {"success": False, "error": "Message ID is required."}
+    if not isinstance(output, str) or not output.strip():
+        return {"success": False, "error": "Edited response cannot be empty."}
+    if len(output) > 200000:
+        return {"success": False, "error": "Edited response is too large."}
+
+    in_memory_message = None
+    for message in chat_context.get():
+        if message.id == message_id:
+            in_memory_message = message
+            break
+
+    target_step = None
+    thread_id = None
+
+    if in_memory_message:
+        if in_memory_message.type != "assistant_message":
+            return {
+                "success": False,
+                "error": "Only assistant responses can be edited.",
+            }
+        target_step = in_memory_message.to_dict()
+        thread_id = in_memory_message.thread_id
+    elif data_layer:
+        candidate_thread_id = session.thread_id or session.thread_id_to_resume
+        thread = (
+            await data_layer.get_thread(thread_id=candidate_thread_id)
+            if candidate_thread_id
+            else None
+        )
+        if thread:
+            thread_id = thread.get("id")
+            target_step = _find_step_by_id(thread.get("steps", []), message_id)
+
+    if not target_step:
+        return {"success": False, "error": "Message not found."}
+
+    if target_step.get("type") != "assistant_message":
+        return {
+            "success": False,
+            "error": "Only assistant responses can be edited.",
+        }
+
+    if session.user and data_layer and thread_id:
+        thread = await data_layer.get_thread(thread_id=thread_id)
+        if not thread or thread.get("userIdentifier") != session.user.identifier:
+            return {"success": False, "error": "You are not authorized."}
+
+    metadata = deepcopy(target_step.get("metadata") or {})
+    metadata["edited"] = True
+    metadata["editedAt"] = utc_now()
+    if session.user:
+        metadata["editedBy"] = session.user.identifier
+
+    target_step["output"] = output
+    target_step["metadata"] = metadata
+
+    if in_memory_message:
+        in_memory_message.content = output
+        in_memory_message.metadata = metadata
+        await in_memory_message.update()
+        return {"success": True, "step": in_memory_message.to_dict()}
+
+    if data_layer:
+        await data_layer.update_step(target_step)
+    await context.emitter.update_step(target_step)
+    return {"success": True, "step": target_step}
 
 
 @sio.on("message_favorite")  # pyright: ignore [reportOptionalCall]

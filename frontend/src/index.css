@@ -238,3 +238,148 @@ code {
     background-color: transparent;
   }
 }
+
+.assistant-editable-content .ProseMirror {
+  outline: none;
+  border: 0;
+  white-space: pre-wrap;
+  tab-size: 4;
+}
+
+.assistant-editable-content .ProseMirror p {
+  margin: 0.2rem 0 0.55rem;
+  line-height: 1.4;
+}
+
+.assistant-editable-content .ProseMirror h1,
+.assistant-editable-content .ProseMirror h2,
+.assistant-editable-content .ProseMirror h3 {
+  margin: 0.8rem 0 0.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: inherit;
+}
+
+.assistant-editable-content .ProseMirror h1 {
+  font-size: 1.45rem;
+}
+
+.assistant-editable-content .ProseMirror h2 {
+  font-size: 1.28rem;
+}
+
+.assistant-editable-content .ProseMirror h3 {
+  font-size: 1.15rem;
+}
+
+.assistant-editable-content .ProseMirror ul,
+.assistant-editable-content .ProseMirror ol {
+  margin: 0.35rem 0 0.6rem;
+  padding-left: 1.5rem;
+}
+
+.assistant-editable-content .ProseMirror ul {
+  list-style-type: disc;
+  list-style-position: outside;
+}
+
+.assistant-editable-content.prose-invert .ProseMirror ul {
+  list-style-type: disc !important;
+  list-style-position: outside !important;
+  padding-inline-start: 1.35rem !important;
+}
+
+.assistant-editable-content.prose-invert .ProseMirror ol {
+  list-style-type: decimal !important;
+  list-style-position: outside !important;
+  padding-inline-start: 1.35rem !important;
+}
+
+.assistant-editable-content .ProseMirror ol {
+  list-style-type: decimal;
+  list-style-position: outside;
+}
+
+.assistant-editable-content .ProseMirror li::marker {
+  color: hsl(var(--foreground) / 0.95);
+}
+
+.assistant-editable-content .ProseMirror li {
+  margin: 0.2rem 0;
+  display: list-item;
+}
+
+.assistant-editable-content .ProseMirror li > p {
+  margin: 0;
+}
+
+.assistant-editable-content .ProseMirror .tableWrapper {
+  margin: 0.75rem 0;
+  overflow-x: auto;
+}
+
+.assistant-editable-content .ProseMirror table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.assistant-editable-content .ProseMirror th,
+.assistant-editable-content .ProseMirror td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.35rem 0.5rem;
+  vertical-align: top;
+  min-width: 4rem;
+  min-height: 1.5rem;
+}
+
+.assistant-editable-content .ProseMirror th {
+  background: hsl(var(--muted) / 0.45);
+  font-weight: 600;
+}
+
+.assistant-editable-content .ProseMirror td p,
+.assistant-editable-content .ProseMirror th p {
+  margin: 0;
+}
+
+.assistant-docx-pages {
+  min-height: 420px;
+  width: 100%;
+  overflow: auto;
+}
+
+.assistant-docx-preview .docx-wrapper {
+  background: hsl(0 0% 88%) !important;
+  padding: 1rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.assistant-docx-preview .docx-wrapper > section.docx {
+  background: #ffffff !important;
+  color: #000000 !important;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 18%), 0 0 0 1px rgb(0 0 0 / 8%);
+  margin: 0 !important;
+  width: auto !important;
+  box-sizing: border-box;
+}
+
+.assistant-docx-preview .docx-wrapper > section.docx + section.docx {
+  margin-top: 0 !important;
+}
+
+.assistant-docx-preview .docx-wrapper h1,
+.assistant-docx-preview .docx-wrapper h2,
+.assistant-docx-preview .docx-wrapper h3,
+.assistant-docx-preview .docx-wrapper h4,
+.assistant-docx-preview .docx-wrapper h5,
+.assistant-docx-preview .docx-wrapper h6,
+.assistant-docx-preview .docx-wrapper p,
+.assistant-docx-preview .docx-wrapper span,
+.assistant-docx-preview .docx-wrapper td,
+.assistant-docx-preview .docx-wrapper th {
+  color: #000000 !important;
+}

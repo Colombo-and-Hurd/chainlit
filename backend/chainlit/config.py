@@ -112,6 +112,9 @@ auto_tag_thread = true
 # Allow users to edit their own messages
 edit_message = true
 
+# Allow users to edit assistant responses from the message action bar
+assistant_message_edit = false
+
 # Allow users to share threads (backend + UI). Requires an app-defined on_shared_thread_view callback.
 allow_thread_sharing = false
 
@@ -335,6 +338,7 @@ class FeaturesSettings(BaseModel):
     unsafe_allow_html: bool = False
     auto_tag_thread: bool = True
     edit_message: bool = True
+    assistant_message_edit: bool = False
     allow_thread_sharing: bool = False
     favorites: bool = False
 

@@ -80,6 +80,7 @@ export interface IChainlitConfig {
     latex?: boolean;
     user_message_markdown?: boolean;
     edit_message?: boolean;
+    assistant_message_edit?: boolean;
     favorites?: boolean;
     mcp?: {
       enabled?: boolean;

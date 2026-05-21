@@ -85,12 +85,18 @@ def build():
         if not (project_root / "package.json").exists():
             return
 
-        pnpm = shutil.which("pnpm")
-        if not pnpm:
-            raise BuildError("pnpm not found!")
+        frontend_dist = project_root / "frontend" / "dist"
+        copilot_dist = project_root / "libs" / "copilot" / "dist"
+        has_prebuilt_ui = frontend_dist.exists() and copilot_dist.exists()
 
-        pnpm_install(project_root, pnpm)
-        pnpm_buildui(project_root, pnpm)
+        if not has_prebuilt_ui:
+            pnpm = shutil.which("pnpm")
+            if not pnpm:
+                raise BuildError("pnpm not found!")
+
+            pnpm_install(project_root, pnpm)
+            pnpm_buildui(project_root, pnpm)
+
         copy_frontend(project_root)
         copy_copilot(project_root)
 
