@@ -1,21 +1,16 @@
-import { Pencil } from '@/components/icons/Pencil';
 import { apiClient } from '@/api';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
+import { DocxMarkdownTextStyle } from '@/extensions/docxMarkdownTextStyle';
 import { cn } from '@/lib/utils';
+import Link from '@tiptap/extension-link';
+import { Table } from '@tiptap/extension-table';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+import TableRow from '@tiptap/extension-table-row';
+import { FontFamily, FontSize } from '@tiptap/extension-text-style';
+import UnderlineExtension from '@tiptap/extension-underline';
+import { Markdown as TiptapMarkdown } from '@tiptap/markdown';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 import { renderAsync } from 'docx-preview';
 import {
   Bold,
@@ -34,20 +29,27 @@ import {
   Underline as UnderlineIcon,
   Undo2
 } from 'lucide-react';
-import { DocxMarkdownTextStyle } from '@/extensions/docxMarkdownTextStyle';
-import { FontFamily, FontSize } from '@tiptap/extension-text-style';
-import Link from '@tiptap/extension-link';
-import { Table } from '@tiptap/extension-table';
-import TableCell from '@tiptap/extension-table-cell';
-import TableHeader from '@tiptap/extension-table-header';
-import TableRow from '@tiptap/extension-table-row';
-import UnderlineExtension from '@tiptap/extension-underline';
-import { Markdown as TiptapMarkdown } from '@tiptap/markdown';
-import { EditorContent, useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import { IStep, useChatInteract, useConfig } from '@chainlit/react-client';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+
+import { IStep, useChatInteract, useConfig } from '@chainlit/react-client';
+
+import { Pencil } from '@/components/icons/Pencil';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 
 const TAB_EQUIVALENT = '\u00A0\u00A0\u00A0\u00A0';
 const TAB_INPUT_CHARACTER = '\t';
@@ -94,7 +96,10 @@ const preserveIndentationForChat = (markdown: string) => {
       }
 
       const leadingSpaces = leadingSpacesMatch[0];
-      return '\u00A0'.repeat(leadingSpaces.length) + lineWithTabs.slice(leadingSpaces.length);
+      return (
+        '\u00A0'.repeat(leadingSpaces.length) +
+        lineWithTabs.slice(leadingSpaces.length)
+      );
     })
     .join('\n');
 };
@@ -117,7 +122,9 @@ export const EditAssistantResponseButton = ({ message }: Props) => {
   const [draftMarkdown, setDraftMarkdown] = useState('');
   const [docxBlob, setDocxBlob] = useState<Blob | null>(null);
   const [docxFontName, setDocxFontName] = useState<string>(DEFAULT_DOCX_FONT);
-  const [docxFontSizePt, setDocxFontSizePt] = useState<number>(DEFAULT_DOCX_FONT_SIZE_PT);
+  const [docxFontSizePt, setDocxFontSizePt] = useState<number>(
+    DEFAULT_DOCX_FONT_SIZE_PT
+  );
   const previewContainerRef = useRef<HTMLDivElement | null>(null);
   const previewRequestVersionRef = useRef(0);
   const editor = useEditor({
@@ -300,7 +307,9 @@ export const EditAssistantResponseButton = ({ message }: Props) => {
       return;
     }
 
-    const markdownValue = preserveIndentationForChat(editor.getMarkdown().trim());
+    const markdownValue = preserveIndentationForChat(
+      editor.getMarkdown().trim()
+    );
 
     if (!markdownValue) {
       toast.error('Edited response cannot be empty.');
@@ -360,7 +369,7 @@ export const EditAssistantResponseButton = ({ message }: Props) => {
         className={cn(
           'flex flex-col',
           isFullscreen
-            ? 'w-[95vw] h-[92vh] max-w-none'
+            ? '!left-0 !top-0 !translate-x-0 !translate-y-0 !w-screen !h-[100dvh] !max-w-none !max-h-none rounded-none'
             : 'w-[92vw] h-[82vh] max-w-[1500px]'
         )}
       >
@@ -401,7 +410,10 @@ export const EditAssistantResponseButton = ({ message }: Props) => {
         </DialogHeader>
         <div className="flex flex-wrap items-center gap-2 p-1">
           <Select value={docxFontName} onValueChange={setDocxFontName}>
-            <SelectTrigger className="h-8 w-[170px] text-xs" aria-label="Document font">
+            <SelectTrigger
+              className="h-8 w-[170px] text-xs"
+              aria-label="Document font"
+            >
               <SelectValue placeholder="Font" />
             </SelectTrigger>
             <SelectContent>
@@ -416,7 +428,10 @@ export const EditAssistantResponseButton = ({ message }: Props) => {
             value={String(docxFontSizePt)}
             onValueChange={(value) => setDocxFontSizePt(Number(value))}
           >
-            <SelectTrigger className="h-8 w-[72px] text-xs" aria-label="Document font size">
+            <SelectTrigger
+              className="h-8 w-[72px] text-xs"
+              aria-label="Document font size"
+            >
               <SelectValue placeholder="Size" />
             </SelectTrigger>
             <SelectContent>
@@ -503,8 +518,12 @@ export const EditAssistantResponseButton = ({ message }: Props) => {
             type="button"
             variant="outline"
             size="icon"
-            className={toolbarButtonClass(!!editor?.isActive('heading', { level: 2 }))}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={toolbarButtonClass(
+              !!editor?.isActive('heading', { level: 2 })
+            )}
+            onClick={() =>
+              editor?.chain().focus().toggleHeading({ level: 2 }).run()
+            }
             aria-label="Heading 2"
             title="Heading 2"
           >
@@ -519,7 +538,9 @@ export const EditAssistantResponseButton = ({ message }: Props) => {
               if (!editor) {
                 return;
               }
-              const previousUrl = editor.getAttributes('link').href as string | undefined;
+              const previousUrl = editor.getAttributes('link').href as
+                | string
+                | undefined;
               const url = window.prompt('Enter URL', previousUrl || '');
               if (url === null) {
                 return;
@@ -528,7 +549,12 @@ export const EditAssistantResponseButton = ({ message }: Props) => {
                 editor.chain().focus().unsetLink().run();
                 return;
               }
-              editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+              editor
+                .chain()
+                .focus()
+                .extendMarkRange('link')
+                .setLink({ href: url })
+                .run();
             }}
             aria-label="Link"
             title="Link"
@@ -540,7 +566,13 @@ export const EditAssistantResponseButton = ({ message }: Props) => {
             variant="outline"
             size="icon"
             className={toolbarButtonClass(false)}
-            onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+            onClick={() =>
+              editor
+                ?.chain()
+                .focus()
+                .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+                .run()
+            }
             aria-label="Insert table"
             title="Insert table"
           >
@@ -577,21 +609,39 @@ export const EditAssistantResponseButton = ({ message }: Props) => {
                 ? 'lg:grid-cols-2'
                 : 'xl:grid-cols-2'
               : 'grid-cols-1',
-            isFullscreen ? 'flex-1 min-h-[420px]' : 'min-h-[320px] max-h-[60vh]'
+            isFullscreen ? 'flex-1 min-h-0' : 'min-h-[320px] max-h-[60vh]'
           )}
         >
-          <div className="assistant-editable-surface min-w-0 overflow-auto border rounded-md p-4 min-h-[320px]">
+          <div
+            className={cn(
+              'assistant-editable-surface min-w-0 overflow-auto border rounded-md p-4 min-h-[320px]',
+              isFullscreen && 'h-full min-h-0'
+            )}
+          >
             <div
-              className="assistant-editable-content prose prose-invert max-w-none min-h-[280px]"
-              style={{ fontFamily: docxFontName, fontSize: `${docxFontSizePt}pt` }}
+              className={cn(
+                'assistant-editable-content prose prose-invert max-w-none min-h-[280px]',
+                isFullscreen && 'h-full min-h-0'
+              )}
+              style={{
+                fontFamily: docxFontName,
+                fontSize: `${docxFontSizePt}pt`
+              }}
             >
               <EditorContent editor={editor} />
             </div>
           </div>
           {isSplitPreview ? (
-            <div className="assistant-docx-preview min-w-0 relative overflow-auto border rounded-md p-3 min-h-[320px] bg-muted/10">
+            <div
+              className={cn(
+                'assistant-docx-preview min-w-0 relative overflow-auto border rounded-md p-3 min-h-[320px] bg-muted/10',
+                isFullscreen && 'h-full min-h-0'
+              )}
+            >
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Generated DOCX</span>
+                <span className="text-xs text-muted-foreground">
+                  Generated DOCX
+                </span>
                 <Button
                   type="button"
                   variant="outline"
@@ -619,7 +669,11 @@ export const EditAssistantResponseButton = ({ message }: Props) => {
           ) : null}
         </div>
         <DialogFooter>
-          <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setIsOpen(false)}
+          >
             Cancel
           </Button>
           <Button type="button" onClick={save} disabled={isSaving}>
