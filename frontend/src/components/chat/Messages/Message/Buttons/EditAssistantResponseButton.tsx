@@ -369,9 +369,24 @@ export const EditAssistantResponseButton = ({ message }: Props) => {
         className={cn(
           'flex flex-col',
           isFullscreen
-            ? '!left-0 !top-0 !translate-x-0 !translate-y-0 !w-screen !h-[100dvh] !max-w-none !max-h-none rounded-none'
+            ? '!inset-0 !m-0 !translate-x-0 !translate-y-0 rounded-none sm:rounded-none'
             : 'w-[92vw] h-[82vh] max-w-[1500px]'
         )}
+        style={
+          isFullscreen
+            ? {
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+                width: '100vw',
+                maxWidth: '100vw',
+                height: '100dvh',
+                maxHeight: '100dvh',
+                transform: 'none'
+              }
+            : undefined
+        }
       >
         <DialogHeader>
           <div className="flex items-center justify-between gap-2">
