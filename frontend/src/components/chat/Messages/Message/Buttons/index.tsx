@@ -9,6 +9,7 @@ import CopyButton from '@/components/CopyButton';
 
 import MessageActions from './Actions';
 import { DebugButton } from './DebugButton';
+import { EditAssistantResponseButton } from './EditAssistantResponseButton';
 import { FeedbackButtons } from './FeedbackButtons';
 
 interface Props {
@@ -26,13 +27,19 @@ const MessageButtons = ({ message, actions, run, contentRef }: Props) => {
   const isAsk = message.waitForAnswer;
   const hasContent = !!message.output;
   const showCopyButton = !!run && hasContent && !isUser && !isAsk;
+  const showEditAssistantResponseButton =
+    hasContent && !isUser && !isAsk && message.type === 'assistant_message';
 
   const messageActions = actions.filter((a) => a.forId === message.id);
 
   const showDebugButton =
     !!config?.debugUrl && !!message.threadId && !!firstInteraction && !!run;
 
-  const show = showCopyButton || showDebugButton || messageActions?.length;
+  const show =
+    showCopyButton ||
+    showDebugButton ||
+    showEditAssistantResponseButton ||
+    messageActions?.length;
 
   if (!show || message.streaming) {
     return null;
@@ -42,6 +49,9 @@ const MessageButtons = ({ message, actions, run, contentRef }: Props) => {
     <div className="-ml-1.5 flex items-center flex-wrap">
       {showCopyButton ? (
         <CopyButton content={message.output} contentRef={contentRef} />
+      ) : null}
+      {showEditAssistantResponseButton ? (
+        <EditAssistantResponseButton message={message} />
       ) : null}
       {run ? <FeedbackButtons message={run} /> : null}
       {messageActions.length ? (

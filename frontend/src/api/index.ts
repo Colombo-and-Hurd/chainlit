@@ -3,9 +3,9 @@ import { toast } from 'sonner';
 
 import { ChainlitAPI, ClientError } from '@chainlit/react-client';
 
-const devServer =
-  (import.meta.env.VITE_API_URL || 'http://localhost:8000') +
-  getRouterBasename();
+const devServer = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL + getRouterBasename()
+  : window.location.origin + getRouterBasename();
 const url = import.meta.env.DEV
   ? devServer
   : window.origin + getRouterBasename();

@@ -9,6 +9,19 @@ export default defineConfig({
   build: {
     sourcemap: true
   },
+  server: {
+    proxy: {
+      '/auth': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      '/user': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      '/project': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      '/healthz': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      '/mcp': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      '/logo': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      '/set-session-cookie': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      '/ws': { target: 'http://127.0.0.1:8000', changeOrigin: true, ws: true }
+    }
+  },
   plugins: [react(), tsconfigPaths(), svgr()],
   resolve: {
     alias: {

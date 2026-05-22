@@ -10,6 +10,7 @@ from chainlit.socket import (
     _get_token_from_cookie,
     clean_session,
     connection_successful,
+    edit_assistant_message,
     load_user_env,
     persist_user_session,
     restore_existing_session,
@@ -630,3 +631,77 @@ class TestConnectionSuccessfulIdempotency:
             await connection_successful("sid-1")
 
         assert on_chat_start.call_count == 1
+        assert session.chat_started is True
+
+
+class TestEditAssistantMessage:
+    @pytest.mark.asyncio
+    async def test_edit_assistant_message_updates_in_memory_and_persists(self):
+        mock_message = Mock()
+        mock_message.id = "assistant-msg-1"
+        mock_message.type = "assistant_message"
+        mock_message.thread_id = "thread-1"
+        mock_message.metadata = {}
+        mock_message.to_dict.return_value = {
+            "id": "assistant-msg-1",
+            "type": "assistant_message",
+            "threadId": "thread-1",
+            "output": "Old output",
+            "metadata": {},
+        }
+        mock_message.update = AsyncMock()
+
+        mock_session = Mock()
+        mock_session.user = Mock(identifier="user-1")
+        mock_session.thread_id = "thread-1"
+        mock_session.thread_id_to_resume = None
+
+        mock_data_layer = AsyncMock()
+        mock_data_layer.get_thread.return_value = {
+            "id": "thread-1",
+            "userIdentifier": "user-1",
+            "steps": [],
+        }
+
+        with (
+            patch("chainlit.socket.WebsocketSession.require", return_value=mock_session),
+            patch("chainlit.socket.init_ws_context", return_value=Mock()),
+            patch("chainlit.socket.get_data_layer", return_value=mock_data_layer),
+            patch("chainlit.socket.chat_context.get", return_value=[mock_message]),
+        ):
+            result = await edit_assistant_message(
+                "sid-1",
+                {"messageId": "assistant-msg-1", "output": "Updated content"},
+            )
+
+        assert result["success"] is True
+        assert mock_message.content == "Updated content"
+        assert mock_message.metadata["edited"] is True
+        assert mock_message.metadata["editedBy"] == "user-1"
+        mock_message.update.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_edit_assistant_message_rejects_non_assistant_step(self):
+        mock_message = Mock()
+        mock_message.id = "user-msg-1"
+        mock_message.type = "user_message"
+
+        mock_session = Mock()
+        mock_session.user = Mock(identifier="user-1")
+        mock_session.thread_id = "thread-1"
+        mock_session.thread_id_to_resume = None
+
+        with (
+            patch("chainlit.socket.WebsocketSession.require", return_value=mock_session),
+            patch("chainlit.socket.init_ws_context", return_value=Mock()),
+            patch("chainlit.socket.get_data_layer", return_value=AsyncMock()),
+            patch("chainlit.socket.chat_context.get", return_value=[mock_message]),
+        ):
+            result = await edit_assistant_message(
+                "sid-1",
+                {"messageId": "user-msg-1", "output": "Updated content"},
+            )
+
+        assert result["success"] is False
+        assert result["error"] == "Only assistant responses can be edited."
+

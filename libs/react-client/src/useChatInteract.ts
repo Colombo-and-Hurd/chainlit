@@ -19,7 +19,7 @@ import {
   tokenCountState
 } from 'src/state';
 import { IFileRef, IStep } from 'src/types';
-import { addMessage } from 'src/utils/message';
+import { addMessage, updateMessageById } from 'src/utils/message';
 import { v4 as uuidv4 } from 'uuid';
 
 import { ChainlitContext } from './context';
@@ -88,6 +88,61 @@ const useChatInteract = () => {
       session?.socket.emit('edit_message', { message });
     },
     [session?.socket]
+  );
+
+  const editAssistantMessage = useCallback(
+    (message: IStep, output: string) => {
+      const previousMessage = { ...message };
+      const editedAt = new Date().toISOString();
+      const nextMessage: IStep = {
+        ...message,
+        output,
+        metadata: {
+          ...(message.metadata || {}),
+          edited: true,
+          editedAt
+        }
+      };
+
+      setMessages((oldMessages) =>
+        updateMessageById(oldMessages, message.id, nextMessage)
+      );
+
+      return new Promise<boolean>((resolve) => {
+        if (!session?.socket) {
+          setMessages((oldMessages) =>
+            updateMessageById(oldMessages, message.id, previousMessage)
+          );
+          resolve(false);
+          return;
+        }
+
+        session.socket.emit(
+          'edit_assistant_message',
+          {
+            messageId: message.id,
+            output
+          },
+          (ack?: { success?: boolean; step?: IStep }) => {
+            if (!ack?.success) {
+              setMessages((oldMessages) =>
+                updateMessageById(oldMessages, message.id, previousMessage)
+              );
+              resolve(false);
+              return;
+            }
+
+            if (ack.step) {
+              setMessages((oldMessages) =>
+                updateMessageById(oldMessages, message.id, ack.step as IStep)
+              );
+            }
+            resolve(true);
+          }
+        );
+      });
+    },
+    [session?.socket, setMessages]
   );
 
   const toggleMessageFavorite = useCallback(
@@ -217,7 +272,8 @@ const useChatInteract = () => {
     setIdToResume,
     updateChatSettings,
     editChatSettings,
-    toggleMessageFavorite
+    toggleMessageFavorite,
+    editAssistantMessage
   };
 };
 

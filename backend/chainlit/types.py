@@ -285,6 +285,11 @@ class ElementRequest(BaseModel):
     sessionId: str
 
 
+class EditAssistantMessageRequest(BaseModel):
+    messageId: str
+    output: str
+
+
 class Theme(str, Enum):
     light = "light"
     dark = "dark"
