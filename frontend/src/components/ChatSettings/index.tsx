@@ -106,9 +106,7 @@ export default function ChatSettingsModal() {
         }`}
       >
         <DialogHeader>
-          <DialogTitle>
-            <Translator path="chat.settings.title" />
-          </DialogTitle>
+          <DialogTitle>Hippocampus</DialogTitle>
           <DialogDescription className="sr-only">
             <Translator path="chat.settings.customize" />
           </DialogDescription>

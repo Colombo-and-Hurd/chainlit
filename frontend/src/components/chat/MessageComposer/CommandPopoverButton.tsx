@@ -5,13 +5,13 @@ import {
   PopoverTrigger
 } from '@radix-ui/react-popover';
 import { every } from 'lodash';
-import { Settings2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 
 import { ICommand, commandsState } from '@chainlit/react-client';
 
 import Icon from '@/components/Icon';
+import { Settings } from '@/components/icons/Settings';
 import { Button } from '@/components/ui/button';
 import {
   Command,
@@ -167,7 +167,7 @@ export const CommandPopoverButton = ({
                   onMouseEnter={scheduleTooltipOpen}
                   onMouseLeave={cancelTooltipOpen}
                 >
-                  <Settings2
+                  <Settings
                     className={cn(
                       '!size-5 transition-transform duration-200',
                       open && 'rotate-45'
