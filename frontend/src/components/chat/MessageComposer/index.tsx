@@ -305,7 +305,7 @@ export default function MessageComposer({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{t('navigation.user.menu.settings')}</p>
+                  <p>Memory</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

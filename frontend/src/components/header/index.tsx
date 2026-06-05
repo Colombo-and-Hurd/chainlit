@@ -19,7 +19,6 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip';
-import { Translator } from 'components/i18n';
 
 import { chatSettingsSidebarOpenState } from '@/state/project';
 
@@ -117,9 +116,7 @@ const Header = memo(() => {
                 <Settings className="!size-5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
-              <Translator path="chat.settings.title" />
-            </TooltipContent>
+            <TooltipContent>Memory</TooltipContent>
           </Tooltip>
         )}
         <ThemeToggle />

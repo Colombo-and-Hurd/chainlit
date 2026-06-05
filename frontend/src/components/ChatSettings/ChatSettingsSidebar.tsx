@@ -192,7 +192,7 @@ export default function ChatSettingsSidebar() {
         <SheetContent className="flex flex-col md:hidden">
           <SheetHeader>
             <SheetTitle id="chat-settings-sidebar-title">
-              <Translator path="chat.settings.title" />
+              Hippocampus
             </SheetTitle>
           </SheetHeader>
           <div className="overflow-y-auto flex-grow flex flex-col gap-4 mt-4">
@@ -227,7 +227,7 @@ export default function ChatSettingsSidebar() {
               >
                 <ArrowLeft />
               </Button>
-              <Translator path="chat.settings.title" />
+              Hippocampus
             </div>
             <CardContent
               id="chat-settings-sidebar-content"
