@@ -87,20 +87,7 @@ const normalizeEditorMarkdown = (markdown: string) => {
 const preserveIndentationForChat = (markdown: string) => {
   return normalizeEditorMarkdown(markdown)
     .split('\n')
-    .map((line) => {
-      const lineWithTabs = line.replace(/\t/g, TAB_EQUIVALENT);
-      const leadingSpacesMatch = lineWithTabs.match(/^ +/);
-
-      if (!leadingSpacesMatch) {
-        return lineWithTabs;
-      }
-
-      const leadingSpaces = leadingSpacesMatch[0];
-      return (
-        '\u00A0'.repeat(leadingSpaces.length) +
-        lineWithTabs.slice(leadingSpaces.length)
-      );
-    })
+    .map((line) => line.replace(/\t/g, TAB_EQUIVALENT))
     .join('\n');
 };
 
@@ -638,10 +625,6 @@ export const EditAssistantResponseButton = ({ message }: Props) => {
                 'assistant-editable-content prose prose-invert max-w-none min-h-[280px]',
                 isFullscreen && 'h-full min-h-0'
               )}
-              style={{
-                fontFamily: docxFontName,
-                fontSize: `${docxFontSizePt}pt`
-              }}
             >
               <EditorContent editor={editor} />
             </div>
