@@ -1,3 +1,4 @@
+import { getMentionLabels } from '@/lib/mentionCatalog';
 import { cn } from '@/lib/utils';
 import { omit } from 'lodash';
 import { useContext, useMemo } from 'react';
@@ -89,6 +90,58 @@ const cursorPlugin = () => {
   };
 };
 
+const mentionPlugin = () => {
+  return (tree: any) => {
+    const labels = getMentionLabels();
+    if (!labels.length) {
+      return;
+    }
+    const sorted = [...labels].sort((a, b) => b.length - a.length);
+    visit(tree, 'text', (node: any, index, parent) => {
+      const text: string = node.value ?? '';
+      if (!text.includes('@')) {
+        return;
+      }
+      const lower = text.toLowerCase();
+      const newNodes: any[] = [];
+      let buffer = '';
+      let i = 0;
+      while (i < text.length) {
+        if (text[i] === '@') {
+          const rest = lower.slice(i + 1);
+          const match = sorted.find(
+            (label) => label && rest.startsWith(label.toLowerCase())
+          );
+          if (match) {
+            if (buffer) {
+              newNodes.push({ type: 'text', value: buffer });
+              buffer = '';
+            }
+            newNodes.push({
+              type: 'mention',
+              data: {
+                hName: 'mention',
+                hProperties: { text: text.slice(i, i + 1 + match.length) }
+              }
+            });
+            i += 1 + match.length;
+            continue;
+          }
+        }
+        buffer += text[i];
+        i += 1;
+      }
+      if (newNodes.length === 0) {
+        return;
+      }
+      if (buffer) {
+        newNodes.push({ type: 'text', value: buffer });
+      }
+      parent!.children.splice(index, 1, ...newNodes);
+    });
+  };
+};
+
 const Markdown = ({
   allowHtml,
   latex,
@@ -124,6 +177,7 @@ const Markdown = ({
   const remarkPlugins = useMemo(() => {
     let remarkPlugins: PluggableList = [
       cursorPlugin,
+      mentionPlugin,
       remarkGfm as any,
       remarkDirective as any,
       MarkdownAlert
@@ -316,6 +370,11 @@ const Markdown = ({
         },
         // @ts-expect-error custom plugin
         blinkingCursor: () => <BlinkingCursor whitespace />,
+        mention: ({ text }: { text?: string }) => (
+          <span className="rounded bg-primary/15 px-1 font-medium text-primary ring-1 ring-primary/20">
+            {text}
+          </span>
+        ),
         alert: ({
           type,
           children,
