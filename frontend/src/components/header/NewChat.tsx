@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 
-import { useChatInteract, useConfig } from '@chainlit/react-client';
+import {
+  useChatInteract,
+  useChatSession,
+  useConfig
+} from '@chainlit/react-client';
 
 import { Translator } from '@/components/i18n';
 import { Button } from '@/components/ui/button';
@@ -76,6 +80,7 @@ const NewChatButton = ({ navigate, onConfirm, ...buttonProps }: Props) => {
   const [open, setOpen] = useState(false);
   const { clear } = useChatInteract();
   const { config } = useConfig();
+  const { chatProfile, setChatProfile } = useChatSession();
 
   const handleClickOpen = () => {
     if (config?.ui?.confirm_new_chat === false) {
@@ -93,6 +98,12 @@ const NewChatButton = ({ navigate, onConfirm, ...buttonProps }: Props) => {
     if (onConfirm) {
       onConfirm();
     } else {
+      const defaultProfile =
+        config?.chatProfiles?.find((profile) => profile.default) ??
+        config?.chatProfiles?.[0];
+      if (defaultProfile?.name && defaultProfile.name !== chatProfile) {
+        setChatProfile(defaultProfile.name);
+      }
       clear();
       navigate?.('/');
     }

@@ -1,3 +1,4 @@
+import { GptBadge, isLucideIconName } from '@/lib/featureVisuals';
 import { cn, hasMessage } from '@/lib/utils';
 import {
   MutableRefObject,
@@ -52,14 +53,22 @@ export default function WelcomeScreen(props: Props) {
       if (currentChatProfile?.icon) {
         return (
           <div className="flex flex-col gap-2 mb-2 items-center">
-            <img
-              className="h-16 w-16 rounded-full"
-              src={
-                currentChatProfile?.icon.startsWith('/public')
-                  ? apiClient.buildEndpoint(currentChatProfile?.icon)
-                  : currentChatProfile?.icon
-              }
-            />
+            {isLucideIconName(currentChatProfile.icon) ? (
+              <GptBadge
+                name={currentChatProfile.icon}
+                className="h-16 w-16"
+                iconClassName="h-8 w-8"
+              />
+            ) : (
+              <img
+                className="h-16 w-16 rounded-full"
+                src={
+                  currentChatProfile?.icon.startsWith('/public')
+                    ? apiClient.buildEndpoint(currentChatProfile?.icon)
+                    : currentChatProfile?.icon
+                }
+              />
+            )}
             {currentChatProfile?.markdown_description ? (
               <Markdown
                 allowHtml={allowHtml}

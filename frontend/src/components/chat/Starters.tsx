@@ -1,7 +1,8 @@
+import { readPendingGptProfile } from '@/lib/pendingGptProfile';
 import { cn } from '@/lib/utils';
 import { useMemo, useState } from 'react';
 
-import { useChatSession, useConfig } from '@chainlit/react-client';
+import { IStarter, useChatSession, useConfig } from '@chainlit/react-client';
 
 import Starter from './Starter';
 import StarterCategory from './StarterCategory';
@@ -14,8 +15,9 @@ export default function Starters({ className }: Props) {
   const { chatProfile } = useChatSession();
   const { config } = useConfig();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const pendingProfile = useMemo(() => readPendingGptProfile(), [chatProfile]);
 
-  const starters = useMemo(() => {
+  const starters = useMemo((): IStarter[] | undefined => {
     if (chatProfile) {
       const selectedChatProfile = config?.chatProfiles.find(
         (profile) => profile.name === chatProfile
@@ -23,9 +25,12 @@ export default function Starters({ className }: Props) {
       if (selectedChatProfile?.starters) {
         return selectedChatProfile.starters;
       }
+      if (pendingProfile?.name === chatProfile && pendingProfile.starters) {
+        return pendingProfile.starters;
+      }
     }
     return config?.starters;
-  }, [config, chatProfile]);
+  }, [config, chatProfile, pendingProfile]);
 
   const starterCategories = config?.starterCategories;
 

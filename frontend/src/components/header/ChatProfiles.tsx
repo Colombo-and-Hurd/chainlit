@@ -1,4 +1,9 @@
-import { useContext, useEffect, useState } from 'react';
+import { GptBadge, isLucideIconName } from '@/lib/featureVisuals';
+import {
+  clearPendingGptProfile,
+  readPendingGptProfile
+} from '@/lib/pendingGptProfile';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSetRecoilState } from 'recoil';
 
 import {
@@ -9,6 +14,7 @@ import {
   useConfig
 } from '@chainlit/react-client';
 
+import { Logo } from '@/components/Logo';
 import { Markdown } from '@/components/Markdown';
 import {
   HoverCard,
@@ -40,30 +46,62 @@ export default function ChatProfiles({ navigate }: Props) {
   const setAttachments = useSetRecoilState<IAttachment[]>(attachmentsState);
   const [newChatProfile, setNewChatProfile] = useState<string | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const pendingProfile = useMemo(() => readPendingGptProfile(), [chatProfile]);
 
-  // Early return check to prevent unnecessary renders and resource waste
-  if (!config?.chatProfiles?.length || config.chatProfiles.length <= 1) {
+  const profiles = useMemo(() => {
+    const base = config?.chatProfiles || [];
+    if (
+      pendingProfile &&
+      !base.some((profile) => profile.name === pendingProfile.name)
+    ) {
+      return [...base, pendingProfile];
+    }
+    return base;
+  }, [config?.chatProfiles, pendingProfile]);
+
+  const selectedProfile = useMemo(
+    () => profiles.find((profile) => profile.name === chatProfile) || null,
+    [profiles, chatProfile]
+  );
+
+  useEffect(() => {
+    if (!chatProfile && profiles.length) {
+      setChatProfile(profiles[0].name);
+    }
+  }, [chatProfile, profiles, setChatProfile]);
+
+  useEffect(() => {
+    if (!chatProfile || !profiles.length) {
+      return;
+    }
+    const profileExists = profiles.some(
+      (profile) => profile.name === chatProfile
+    );
+    if (profileExists) {
+      if (
+        pendingProfile &&
+        chatProfile === pendingProfile.name &&
+        config?.chatProfiles?.some((profile) => profile.name === chatProfile)
+      ) {
+        clearPendingGptProfile();
+      }
+      return;
+    }
+    if (chatProfile.startsWith('gpt:')) {
+      return;
+    }
+    setChatProfile(profiles[0].name);
+  }, [
+    chatProfile,
+    config?.chatProfiles,
+    pendingProfile,
+    profiles,
+    setChatProfile
+  ]);
+
+  if (!profiles.length || profiles.length <= 1) {
     return null;
   }
-
-  // Handle case when no profile is selected
-  useEffect(() => {
-    if (!chatProfile) {
-      setChatProfile(config.chatProfiles[0].name);
-    }
-  }, [chatProfile, config.chatProfiles, setChatProfile]);
-
-  // Handle case when selected profile becomes invalid
-  useEffect(() => {
-    if (chatProfile) {
-      const profileExists = config.chatProfiles.some(
-        (profile) => profile.name === chatProfile
-      );
-      if (!profileExists) {
-        setChatProfile(config.chatProfiles[0].name);
-      }
-    }
-  }, [chatProfile, config.chatProfiles, setChatProfile]);
 
   const handleClose = () => {
     setOpenDialog(false);
@@ -81,6 +119,12 @@ export default function ChatProfiles({ navigate }: Props) {
 
   const allowHtml = config?.features?.unsafe_allow_html;
   const latex = config?.features?.latex;
+  const displayLabel =
+    selectedProfile?.display_name ||
+    selectedProfile?.name ||
+    pendingProfile?.display_name ||
+    chatProfile ||
+    'Select profile';
 
   return (
     <div className="relative">
@@ -99,13 +143,16 @@ export default function ChatProfiles({ navigate }: Props) {
           id="chat-profiles"
           className="w-fit border-none bg-transparent text-muted-foreground font-semibold text-lg hover:bg-accent"
         >
-          <SelectValue placeholder="Select profile" />
+          <SelectValue placeholder="Select profile">{displayLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {config.chatProfiles.map((profile) => {
-            const icon = profile.icon?.includes('/public')
+          {profiles.map((profile) => {
+            const imageSrc = profile.icon?.includes('/public')
               ? apiClient.buildEndpoint(profile.icon)
-              : profile.icon;
+              : profile.icon?.startsWith('http') ||
+                  profile.icon?.startsWith('/')
+                ? profile.icon
+                : undefined;
 
             return (
               <HoverCard openDelay={0} closeDelay={0} key={profile.name}>
@@ -116,12 +163,22 @@ export default function ChatProfiles({ navigate }: Props) {
                     className="cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      {icon && (
-                        <img
-                          src={icon}
-                          alt={profile.display_name || profile.name}
-                          className="w-6 h-6 rounded-md object-cover"
+                      {isLucideIconName(profile.icon) ? (
+                        <GptBadge
+                          name={profile.icon}
+                          className="h-7 w-7"
+                          iconClassName="h-4 w-4"
                         />
+                      ) : imageSrc ? (
+                        <img
+                          src={imageSrc}
+                          alt={profile.display_name || profile.name}
+                          className="w-7 h-7 rounded-md object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent">
+                          <Logo className="h-4 w-auto" />
+                        </span>
                       )}
                       <span>{profile.display_name || profile.name}</span>
                     </div>
