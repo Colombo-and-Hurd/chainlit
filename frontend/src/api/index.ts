@@ -3,7 +3,16 @@ import { toast } from 'sonner';
 
 import { ChainlitAPI, ClientError } from '@chainlit/react-client';
 
-import { GptRecord, GptToolDescriptor, GptWritePayload } from '@/types/gpts';
+import {
+  GptGenerateInstructionsPayload,
+  GptGenerateInstructionsResult,
+  GptPreviewPayload,
+  GptPreviewResult,
+  GptRecord,
+  GptToolDescriptor,
+  GptUpdatePayload,
+  GptWritePayload
+} from '@/types/gpts';
 import {
   WorkflowBlockDescriptor,
   WorkflowRecord,
@@ -99,10 +108,7 @@ class ExtendedChainlitAPI extends ChainlitAPI {
     return payload?.data?.item;
   }
 
-  async updateGpt(
-    gptId: string,
-    data: Partial<GptWritePayload>
-  ): Promise<GptRecord> {
+  async updateGpt(gptId: string, data: GptUpdatePayload): Promise<GptRecord> {
     const res = await this.put(`/gpts/${gptId}`, data);
     const payload = await res.json();
     return payload?.data?.item;
@@ -112,10 +118,35 @@ class ExtendedChainlitAPI extends ChainlitAPI {
     await this.delete(`/gpts/${gptId}`, {});
   }
 
+  async cloneGpt(gptId: string): Promise<GptRecord> {
+    const res = await this.post(`/gpts/${gptId}/clone`, {});
+    const payload = await res.json();
+    return payload?.data?.item;
+  }
+
   async listGptTools(): Promise<GptToolDescriptor[]> {
     const res = await this.get('/gpts/tools');
     const payload = await res.json();
     return payload?.data?.items || [];
+  }
+
+  async generateGptInstructions(
+    data: GptGenerateInstructionsPayload
+  ): Promise<GptGenerateInstructionsResult> {
+    const res = await this.post('/gpts/generate-instructions', data);
+    const payload = await res.json();
+    return {
+      instructions: payload?.data?.instructions || '',
+      summary: payload?.data?.summary || ''
+    };
+  }
+
+  async previewGpt(data: GptPreviewPayload): Promise<GptPreviewResult> {
+    const res = await this.post('/gpts/preview', data);
+    const payload = await res.json();
+    return {
+      reply: payload?.data?.reply || ''
+    };
   }
 
   async uploadGptKnowledge(
@@ -190,6 +221,40 @@ class ExtendedChainlitAPI extends ChainlitAPI {
       input_payload
     });
     const payload = await res.json();
+    return payload?.data?.item;
+  }
+
+  async enqueueWorkflowRunWithUpload(
+    workflowId: string,
+    input_text: string,
+    files?: File[]
+  ): Promise<WorkflowRunRecord> {
+    const form = new FormData();
+    form.append('input_text', input_text || '');
+    const normalizedFiles = files || [];
+    normalizedFiles.forEach((file) => {
+      form.append('files', file);
+    });
+    if (normalizedFiles.length === 1) {
+      form.append('file', normalizedFiles[0]);
+    }
+    const base = this.httpEndpoint.endsWith('/')
+      ? this.httpEndpoint
+      : `${this.httpEndpoint}/`;
+    const res = await fetch(
+      new URL(`workflows/${workflowId}/runs/upload`, base),
+      {
+        method: 'POST',
+        credentials: 'include',
+        body: form
+      }
+    );
+    const payload = await res.json();
+    if (!res.ok) {
+      throw new Error(
+        payload?.error?.message || payload?.detail || 'Failed to start run'
+      );
+    }
     return payload?.data?.item;
   }
 
