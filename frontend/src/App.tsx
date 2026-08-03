@@ -29,7 +29,7 @@ function App() {
 
   const { isAuthenticated, data, isReady } = useAuth();
   const userEnv = useRecoilValue(userEnvState);
-  const { connect, chatProfile, setChatProfile } = useChatSession();
+  const { connect, chatProfile, sessionId, setChatProfile } = useChatSession();
 
   const configLoaded = !!config;
 
@@ -48,7 +48,15 @@ function App() {
       transports: window.transports,
       userEnv
     });
-  }, [userEnv, isAuthenticated, connect, isReady, chatProfileOk]);
+  }, [
+    userEnv,
+    isAuthenticated,
+    connect,
+    isReady,
+    chatProfileOk,
+    chatProfile,
+    sessionId
+  ]);
 
   useEffect(() => {
     if (
