@@ -167,6 +167,7 @@
           "status": {
             "copied": "Link copied",
             "created": "Share link created!",
+            "copyManually": "Share link created. Your browser blocked automatic copying, so the link above is selected. Press Ctrl+C (Cmd+C on Mac) to copy it.",
             "unshared": "Sharing disabled for this thread"
           },
           "error": {
